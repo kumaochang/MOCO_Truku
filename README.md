@@ -1,4 +1,4 @@
-# MOCO Tagalog (Truku MMOC Search)
+# MOCO Truku (Truku MMOC Search)
 
 A lightweight, client-side search UI for the Truku Multimodal Corpus. The page loads `corpus.json`, renders search results, and plays segments from a single shared video element with time-based seeking.
 
