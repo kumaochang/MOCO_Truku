@@ -1,6 +1,6 @@
 # FormosanBench Pilot Study 細節大綱
 
-**目標：** 以最小可行規模驗證 benchmark 設計的可行性，並產出一篇可投稿的 short/workshop paper  
+**目標：** 驗證 benchmark 設計的可行性 
 **時程：** 2026 年 3 月中 → 6 月中（約 12 週）  
 ---
 
@@ -145,11 +145,11 @@ def compute_agreement(responses: list[dict]) -> str:
 
 ---
 
-## 3. 你的標注工作流程
+## 3. 標注工作流程
 
-### 建議工具：Streamlit 自建輕量介面
+### Streamlit 介面
 
-不需要架設複雜的 Label Studio。用 Streamlit 寫一個簡單的 review 頁面：
+用 Streamlit 寫一個簡單的 review 頁面：
 
 ```
 ┌──────────────────────────────────────────────┐
