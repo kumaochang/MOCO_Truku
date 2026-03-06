@@ -1,6 +1,6 @@
-# FormosanBench Pilot Study 細節大綱
+# FormosanBench Pilot Study
 
-**目標：** 驗證 benchmark 設計的可行性 
+**目標：** 驗證 benchmark 設計的可行性  
 **時程：** 2026 年 3 月中 → 6 月中（約 12 週）  
 ---
 
