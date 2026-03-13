@@ -1,0 +1,552 @@
+# MoCo v2: Event-Driven Multimodal Corpus Query
+
+## 從 Symbolic Filtering 到 Geometric Retrieval：多模態語料庫查詢的典範轉移
+
+**博士論文 Pilot Study 規劃**
+
+---
+
+## 0. 核心論點
+
+語料庫查詢的發展歷程可以這樣看：
+
+```
+CQP / Treebank Query         →  Dense Text Retrieval      →  ???
+(symbolic, structural)           (geometric, vector-based)
+                                                              ↑
+"找所有 V-not-V 問句"           "找語意上像這句話的句子"        我們要做的：
+                                                              
+                                                           Multimodal Event Retrieval
+                                                           (event-driven, cross-modal)
+                                                              
+                                                           "找所有跟這段『安慰』
+                                                            互動相似的多模態事件"
+```
+
+**gap：** 文本語料庫已經從 symbolic 走向 geometric，但多模態語料庫的查詢仍停留在 metadata filtering 或 keyword search。沒有人提出過以**多模態事件**為查詢單位、以**跨模態向量相似度**為檢索機制的語料探索範式。
+
+**為什麼這很重要：** 語用現象（勸告、安慰、拒絕、開玩笑）本質上是多模態的——語言內容可能含蓄，但語調、停頓、表情、手勢共同構成完整的交際行為。這些現象幾乎無法用傳統的形式化查詢條件描述，但人類可以直覺辨識「這兩個場景在做類似的事」。如果我們能在向量空間中捕捉這種相似性，就打開了一扇全新的研究窗口。
+
+---
+
+## 1. 研究問題
+
+**RQ1 (表示學習)：** 能否將影片中的多模態互動事件（語音 + 影像 + 文字）嵌入到統一的向量空間中，使得語用功能相近的事件在空間中彼此靠近，即使它們來自不同語言、不同文化？
+
+**RQ2 (檢索效能)：** 以一段互動片段作為 query（query-by-example），系統檢索語用功能相似事件的準確率如何？不同模態組合（audio-only, video-only, text-only, multimodal）的檢索效能差異為何？
+
+**RQ3 (語言學應用)：** 透過 event-driven 檢索，能否揭示不同語言/文化（如華語 vs. 太魯閣語 vs. 阿美語）在完成相似交際行為時，各模態的貢獻模式（modality profile）有何系統性差異？
+
+---
+
+## 2. 概念架構
+
+### 2.1 多模態事件（Multimodal Event）的定義
+
+一個多模態事件是一個時間界定的互動片段，包含以下層次：
+
+```
+Multimodal Event (e.g., "安慰", 15 秒)
+│
+├── Linguistic tier
+│     ├── transcript (族語/華語)
+│     ├── speech act label (comfort / advise / joke / ...)
+│     └── code-switching markers
+│
+├── Prosodic tier
+│     ├── pitch contour
+│     ├── pause structure
+│     ├── speech rate
+│     └── voice quality
+│
+├── Visual tier
+│     ├── facial expression
+│     ├── gesture type + timing
+│     ├── gaze direction
+│     ├── body posture
+│     └── proxemics (interpersonal distance)
+│
+└── Contextual tier
+      ├── setting (indoor/outdoor, formal/informal)
+      ├── participant roles (anchor/interviewee/elder/...)
+      └── cultural context tags
+```
+
+### 2.2 查詢範式對照
+
+| 面向 | 傳統語料庫查詢 | Event-Driven Multimodal Query |
+|------|-------------|------|
+| 查詢單位 | 詞、詞組、句法樹 | 多模態事件片段 |
+| 查詢語言 | CQP, TGrep, XPath | Query-by-example (影片/語音片段) |
+| 匹配機制 | Symbolic pattern matching | Vector similarity (cosine / hyperbolic distance) |
+| 回傳結果 | Concordance lines (KWIC) | Ranked list of similar multimodal events |
+| 適合研究 | 詞彙、語法、搭配 | 語用、互動、手勢、韻律、跨文化比較 |
+| 使用者需要 | 精確的形式化條件 | 一個範例片段 + 直覺 |
+
+### 2.3 系統架構
+
+```
+                    ┌─────────────────────────────┐
+                    │    Multimodal Event Corpus   │
+                    │  (segmented, multi-tier)     │
+                    └──────────┬──────────────────┘
+                               │
+                    ┌──────────▼──────────────────┐
+                    │   Modality-Specific Encoders │
+                    │                              │
+                    │  Audio: Whisper encoder       │
+                    │         + prosody features    │
+                    │                              │
+                    │  Visual: SigLIP / CLIP       │
+                    │          + pose estimation   │
+                    │          + facial AU         │
+                    │                              │
+                    │  Text: multilingual LLM      │
+                    │        sentence embedding    │
+                    └──────────┬──────────────────┘
+                               │
+                    ┌──────────▼──────────────────┐
+                    │   Cross-Modal Fusion Layer   │
+                    │                              │
+                    │  Option A: Late fusion       │
+                    │    concat → projection       │
+                    │                              │
+                    │  Option B: Contrastive       │
+                    │    learning (CLIP-style)     │
+                    │    across modalities         │
+                    │                              │
+                    │  Option C: VLM embedding     │
+                    │    直接用 Video LLM 的        │
+                    │    internal representation   │
+                    └──────────┬──────────────────┘
+                               │
+                    ┌──────────▼──────────────────┐
+                    │   Unified Event Embedding    │
+                    │   (Euclidean or Hyperbolic)  │
+                    └──────────┬──────────────────┘
+                               │
+              ┌────────────────┼────────────────┐
+              ▼                ▼                ▼
+        ┌──────────┐   ┌──────────┐   ┌────────────┐
+        │ Query-by-│   │ Cluster  │   │ Cross-     │
+        │ Example  │   │ Analysis │   │ Cultural   │
+        │ Retrieval│   │ (自動發現 │   │ Comparison │
+        │          │   │  事件類型)│   │            │
+        └──────────┘   └──────────┘   └────────────┘
+```
+
+---
+
+## 3. Pilot Study 設計
+
+### 3.1 範圍
+
+| 面向 | 選擇 | 理由 |
+|------|------|------|
+| 語言 | 太魯閣語、阿美語、華語 | 2 族語 + 華語作對照；TITV 新聞中三者都有 |
+| 語用事件類型 | 4 類（見下方）| 在新聞中可觀察到、跨文化可比較 |
+| 事件數量 | 每語言 × 每類型 ~15–20 個 = ~200 個事件 | 足以訓練 retrieval 模型、做統計比較 |
+| 資料來源 | TITV 族語新聞（含主播播報、訪談、現場報導）| 公開可取得、多語混用 |
+
+### 3.2 四類語用事件
+
+選擇標準：(a) 在 TITV 新聞中自然出現、(b) 跨語言可比較、(c) 多模態特徵明顯
+
+| 事件類型 | 典型場景 | 多模態特徵預期 |
+|---------|---------|--------------|
+| **關懷 / 慰問 (Comforting)** | 災後訪問、部落探視報導 | 柔和語調、前傾身體、點頭、放慢語速 |
+| **慶祝 / 歡迎 (Celebrating)** | 豐年祭報導、頒獎典禮 | 高亢語調、笑容、歡呼、rhythmic clapping |
+| **解說 / 教導 (Explaining)** | 文化傳承報導、耆老訪談 | 指示性手勢、穩定語速、eye contact |
+| **呼籲 / 勸告 (Urging)** | 政策訴求、環境議題報導 | 加重語氣、emphatic gesture、repeated patterns |
+
+這四類構成一個 2×2 矩陣：情感強度（高/低）× 互動方向（支持/推動），有助於分析。
+
+### 3.3 事件切分與標注流程
+
+**Phase 1: 粗切分（半自動）**
+
+```
+TITV 新聞影片（完整集）
+    │
+    ├──→ [場景偵測] PySceneDetect → 自動切分場景
+    ├──→ [語者變換] pyannote speaker diarization → 偵測說話者切換
+    ├──→ [語種偵測] XLSR-53 / Whisper → 標記族語 vs. 華語段落
+    │
+    └──→ 產出候選事件片段（10–45 秒）
+         你快速掃過，選出屬於四類語用事件的片段
+         預估：瀏覽 1 小時原始影片 → 篩出 ~10–15 個事件
+```
+
+**Phase 2: 多層標注（Human-AI Collaborative）**
+
+對每個已選定的事件片段：
+
+| 標注層 | 方法 | 你的角色 |
+|--------|------|---------|
+| Speech act label | 你直接標注（4 類 + "other"） | 主力 |
+| 語種 + CS 標記 | Whisper + XLSR 自動，你 verify | 審核 |
+| 華語轉寫/翻譯 | OCR 字幕 + Whisper，你修正 | 審核 |
+| 族語轉寫 | Whisper 候選 + 你盡力修正（太魯閣語可以做較好，阿美語可能需要 rough transcription）| 盡力 |
+| Prosodic features | 自動擷取（Parselmouth: F0, intensity, speech rate, pause duration） | 不需人工 |
+| Visual features | VLM 自動描述 + MediaPipe 骨架 / AU 偵測 | 你 verify VLM 描述 |
+| 手勢標注 | VLM 候選 + 你 verify（「指示性手勢」「節拍手勢」「象徵手勢」等粗類別） | 審核 |
+
+**關鍵的務實簡化：**
+- 族語轉寫不需要完美——這裡的研究重點是**多模態事件的相似性檢索**，不是 ASR
+- 太魯閣語你可以做較深的轉寫；阿美語可以只做粗略標注或僅用華語翻譯
+- 手勢標注用粗類別就好（5–6 類），不需要做 ELAN 等級的精細標注
+
+### 3.4 標注時間估算
+
+| 步驟 | 事件數 | 每事件時間 | 總時數 |
+|------|-------|----------|-------|
+| Phase 1: 瀏覽篩選 | 需看 ~20 小時原始影片 | 3x 快轉 → ~7 小時 | 7 hr |
+| Phase 2: Speech act 標注 | 200 | ~20 秒 | 1 hr |
+| Phase 2: 語種/CS verify | 200 | ~15 秒 | 1 hr |
+| Phase 2: 轉寫/翻譯 verify | 200 | ~1.5 分鐘 | 5 hr |
+| Phase 2: 視覺/手勢 verify | 200 | ~30 秒 | 2 hr |
+| 品質回顧 | 抽 20% | ~2 分鐘 | 1.5 hr |
+| **合計** | | | **~18 hr** |
+
+分散在 2–3 週內完成是合理的。
+
+---
+
+## 4. 實驗設計
+
+### Experiment 1: Multimodal Event Embedding（表示學習）
+
+**目標：** 比較不同方法將多模態事件映射到向量空間的效果。
+
+**方法 A: Late Fusion Baseline**
+```python
+# 各模態分別編碼，然後拼接 + 投影
+audio_emb = whisper_encoder(audio)           # 768-dim
+visual_emb = siglip_encoder(keyframes)       # 768-dim
+text_emb = multilingual_e5(transcript)       # 768-dim
+prosody_feat = extract_prosody(audio)         # ~20-dim (F0 stats, pause ratio, rate, ...)
+
+event_emb = MLP(concat(audio_emb, visual_emb, text_emb, prosody_feat))  # → 256-dim
+```
+
+**方法 B: Contrastive Learning（類 CLIP）**
+- 正樣本對：同一事件的不同模態（audio ↔ visual ↔ text）
+- 負樣本對：不同事件的跨模態配對
+- 學習一個共享嵌入空間，使同一事件的各模態向量互相靠近
+
+**方法 C: Video LLM as Encoder**
+- 直接用 Qwen2.5-VL 或 InternVL3 處理完整影片片段
+- 擷取最後一層的 [CLS] 或 pooled representation 作為 event embedding
+- 最簡單，但可能最有效（利用了大量預訓練知識）
+
+**方法 D: Hyperbolic Event Embedding**
+- 將方法 A 或 C 的向量投射到 Poincaré ball
+- 假說：語用事件具有層級結構（e.g., "Celebrating" 包含 "cheering" 和 "welcoming"），雙曲空間更適合
+- 連結你在 hyperbolic embeddings 的研究背景
+
+**評估：** 用事件類型標籤做 retrieval evaluation
+- 給定一個 query 事件，檢索 top-k 最相似事件
+- 計算 Precision@k, MAP, 是否正確檢索到同類型事件
+- 分析：跨語言檢索是否可行（用太魯閣語事件 query，能否找到阿美語/華語中的類似事件）
+
+### Experiment 2: Modality Ablation（模態貢獻分析）
+
+| 條件 | 使用的模態 | 研究問題 |
+|------|----------|---------|
+| Text-only | 轉寫/翻譯文字 | 純語言內容能檢索到多少？ |
+| Audio-only | 語音特徵（含韻律） | 韻律模式是否跨語言通用？ |
+| Visual-only | 影像幀 + 骨架/表情 | 身體語言的跨文化可遷移性？ |
+| Audio + Visual | 語音 + 影像（無文字） | 非語言模態的組合效果 |
+| Full multimodal | 全部模態 | 完整模型的上界 |
+
+**預期的有趣發現：**
+- 「關懷/慰問」可能 visual 模態最重要（前傾、觸碰、柔和表情）
+- 「解說/教導」可能 audio 模態最重要（穩定語調、指示性停頓）
+- 「慶祝」可能 visual + audio 都很重要（歡呼聲 + 笑容 + 動作）
+- 跨語言時，非語言模態的檢索效果可能優於語言模態
+
+### Experiment 3: Cross-Cultural Pragmatic Comparison（跨文化語用比較）
+
+這是語言學貢獻最大的實驗。
+
+**方法：**
+1. 在 embedding 空間中，以事件類型為單位計算各語言的 cluster centroid
+2. 比較華語 vs. 太魯閣語 vs. 阿美語在表達同一語用功能時的：
+   - **Modality profile：** 各模態向量到 centroid 的距離分布（哪個模態貢獻最大？）
+   - **Intra-class variance：** 同一語言內同類事件的向量分散程度（表達策略多樣性）
+   - **Cross-lingual distance：** 不同語言表達同一語用功能的向量距離（文化差異量化）
+
+**視覺化：**
+```
+           Comforting 事件在 embedding 空間中的分布
+
+    ●  太魯閣語                    ○  華語
+    ●  太魯閣語         △          ○  華語
+      ●               △ △           ○
+    ●                △              ○  ○
+                    △
+
+    （如果兩個語言的 cluster 分離 → 文化差異大）
+    （如果重疊 → 該語用功能的表達方式跨文化相似）
+```
+
+**定性分析（Case Study）：**
+- 從檢索結果中選取有代表性的 query-result pairs
+- 比較太魯閣語和華語在「慰問」場景中的具體差異：
+  - 太魯閣語是否更依賴 prosodic cues（語調變化）？
+  - 華語是否更依賴 lexical cues（安慰性詞語）？
+  - 身體語言的差異（如距離、觸碰的文化差異）？
+
+---
+
+## 5. 技術實現細節
+
+### 5.1 Prosodic Feature Extraction
+
+```python
+import parselmouth
+import numpy as np
+
+def extract_prosody(audio_path, sr=16000):
+    snd = parselmouth.Sound(audio_path)
+    
+    # F0 (pitch)
+    pitch = snd.to_pitch()
+    f0_values = pitch.selected_array['frequency']
+    f0_values = f0_values[f0_values > 0]  # remove unvoiced
+    
+    # Intensity
+    intensity = snd.to_intensity()
+    
+    # Speech rate (syllable nuclei detection)
+    # ... (via Praat script or simple energy-based)
+    
+    # Pause structure
+    # ... (silence detection → pause count, mean pause duration, pause ratio)
+    
+    return {
+        'f0_mean': np.mean(f0_values),
+        'f0_std': np.std(f0_values),
+        'f0_range': np.ptp(f0_values),
+        'intensity_mean': intensity.get_average(),
+        'speech_rate': syllables_per_second,
+        'pause_ratio': total_pause / total_duration,
+        'mean_pause_duration': mean_pause,
+        'pause_count': n_pauses,
+    }
+```
+
+### 5.2 Visual Feature Extraction
+
+```python
+# MediaPipe for pose + face
+import mediapipe as mp
+
+# Pose estimation → gesture features
+mp_pose = mp.solutions.pose
+# 偵測：手部位置變化、頭部傾斜、身體前傾角度
+
+# Face mesh → facial action units (rough)
+mp_face = mp.solutions.face_mesh
+# 偵測：笑容（AU6+AU12）、皺眉（AU4）、嘴巴張開程度
+
+# SigLIP / CLIP for scene-level visual semantics
+from transformers import AutoModel
+siglip = AutoModel.from_pretrained("google/siglip-so400m-patch14-384")
+# 對每 2 秒的 keyframe 提取 visual embedding，再 mean pooling
+```
+
+### 5.3 Event Embedding 訓練
+
+```python
+# 小規模 contrastive learning
+# 正樣本：同一事件類型（across languages）
+# 負樣本：不同事件類型
+
+import torch
+import torch.nn as nn
+
+class MultimodalEventEncoder(nn.Module):
+    def __init__(self, audio_dim=768, visual_dim=768, text_dim=768, 
+                 prosody_dim=20, output_dim=256):
+        super().__init__()
+        input_dim = audio_dim + visual_dim + text_dim + prosody_dim
+        self.projector = nn.Sequential(
+            nn.Linear(input_dim, 512),
+            nn.ReLU(),
+            nn.Linear(512, output_dim),
+            nn.LayerNorm(output_dim)
+        )
+    
+    def forward(self, audio_emb, visual_emb, text_emb, prosody_feat):
+        combined = torch.cat([audio_emb, visual_emb, text_emb, prosody_feat], dim=-1)
+        return self.projector(combined)
+
+# Supervised contrastive loss (SupCon)
+# 用 speech act label 作為 supervision
+# 200 個事件雖少，但 SupCon + 適當的 data augmentation 應可學到有意義的空間
+```
+
+### 5.4 查詢介面原型
+
+```
+┌──────────────────────────────────────────────────────┐
+│  MoCo v2: Event-Driven Multimodal Corpus Explorer    │
+├──────────────────────────────────────────────────────┤
+│                                                      │
+│  🔍 Query Mode:  [● Query-by-Example]               │
+│                  [○ Query-by-Description]             │
+│                  [○ Query-by-Sketch (future)]        │
+│                                                      │
+│  ┌──────────────────────┐                            │
+│  │ [▶ 播放 query 影片]  │  Query: Truku comforting   │
+│  │  太魯閣語・慰問場景  │  event #037                │
+│  │  15.3 sec            │  Modality weights:         │
+│  └──────────────────────┘  Audio: ████████ 0.8       │
+│                            Visual: ██████ 0.6        │
+│                            Text: ████ 0.4            │
+│                                                      │
+│  ─── Retrieved Events (ranked by similarity) ────    │
+│                                                      │
+│  1. [0.91] Amis comforting #012     [▶ Play]        │
+│     模態相似度: A:0.88 V:0.93 T:0.71                │
+│     「阿美語耆老安慰受災戶，前傾握手」              │
+│                                                      │
+│  2. [0.87] Mandarin comforting #045 [▶ Play]        │
+│     模態相似度: A:0.82 V:0.90 T:0.85                │
+│     「華語記者訪問居民，語氣柔和」                   │
+│                                                      │
+│  3. [0.74] Truku urging #023        [▶ Play]        │
+│     模態相似度: A:0.79 V:0.68 T:0.55                │
+│     「太魯閣語主播報導政策議題」                     │
+│                                                      │
+│  ─── Modality Profile Comparison ─────────────       │
+│                                                      │
+│  [雷達圖: query event vs. top-3 results 的           │
+│   各模態相似度分布比較]                              │
+│                                                      │
+│  ─── Cross-Cultural Analysis ─────────────────       │
+│                                                      │
+│  [散佈圖: 同類事件在 embedding 空間中                │
+│   按語言著色的分布，2D t-SNE/UMAP]                  │
+│                                                      │
+└──────────────────────────────────────────────────────┘
+```
+
+---
+
+## 6. 論文結構（Full Paper, ACL/EMNLP 格式, 8 頁）
+
+```
+Title: From Concordance to Similarity: Event-Driven Multimodal 
+       Corpus Query for Cross-Cultural Pragmatic Research
+
+Abstract
+
+1. Introduction
+   - 語料庫查詢的典範：CQP → dense retrieval → ?
+   - Gap: 多模態語料庫缺乏 event-driven 查詢機制
+   - 為什麼語用研究需要這個：形式化條件無法捕捉的現象
+   - 台灣南島語 + TITV 作為理想 testbed
+   - 貢獻：(1) 新查詢範式 (2) 多模態事件資料集 
+           (3) embedding 方法 (4) 跨文化語用分析
+
+2. Background & Related Work
+   - 2.1 語料庫查詢技術演進 (CQP, treebanks, dense retrieval)
+   - 2.2 多模態語料庫 (MultiMoCo, 其他多模態語料)
+   - 2.3 Multimodal representation learning (CLIP, VideoCLIP, ...)
+   - 2.4 跨文化語用研究 & gesture studies
+   - 2.5 台灣南島語語料資源
+
+3. The Multimodal Event Query Framework
+   - 3.1 多模態事件的定義與切分
+   - 3.2 多層標注架構
+   - 3.3 Event embedding 方法（A/B/C/D 四種）
+   - 3.4 查詢機制：query-by-example retrieval
+
+4. Dataset: FormosanPragmatics
+   - 4.1 來源：TITV 族語新聞
+   - 4.2 語言選擇（太魯閣語、阿美語、華語）
+   - 4.3 四類語用事件
+   - 4.4 標注流程（Human-AI collaborative）
+   - 4.5 資料集統計
+
+5. Experiments
+   - 5.1 Event retrieval evaluation (Exp 1)
+   - 5.2 Modality ablation (Exp 2)
+   - 5.3 Cross-cultural pragmatic analysis (Exp 3)
+
+6. Discussion
+   - 6.1 從 symbolic 到 geometric 查詢的意義
+   - 6.2 各模態在不同語用事件中的貢獻
+   - 6.3 太魯閣語 vs. 阿美語 vs. 華語的交際策略差異
+   - 6.4 對語料庫語言學方法論的啟示
+   - 6.5 Limitations
+
+7. Conclusion & Future Work
+   - 擴充至更多語言和事件類型
+   - 整合到 MultiMoCo 平台
+   - 與 FormosanBench 的結合（VLM evaluation + corpus query）
+```
+
+---
+
+## 7. 與 FormosanBench 的關係
+
+兩者可以整合成一篇博士論文的兩大支柱：
+
+```
+博士論文：多模態 AI 與台灣南島語：從評測到探索
+
+Part I: FormosanBench (評測面)
+  → 現有 VLM 對南島語文化內容理解到什麼程度？
+  → Contribution: benchmark dataset + VLM 文化偏差分析
+
+Part II: MoCo v2 (方法論面)  ← 這個更有深度
+  → 如何利用多模態表示學習建構新型語料探索工具？
+  → Contribution: 新查詢範式 + event embedding + 跨文化語用分析
+
+共享基礎：
+  → TITV 影片語料
+  → 多模態前處理 pipeline
+  → VLM 特徵提取
+  → Human-AI collaborative 標注框架
+```
+
+Part I 是 Part II 的先決條件：你需要先知道 VLM 能「看懂」多少，才能決定在 MoCo v2 中多大程度依賴 VLM 的 visual features。
+
+---
+
+## 8. 時程（12 週 Pilot）
+
+| 週次 | 工作內容 |
+|------|---------|
+| **W1–2** | 影片蒐集 + 前處理 pipeline（場景切分、語者偵測）；閱讀 VideoCLIP、dense retrieval、cross-cultural pragmatics 文獻 |
+| **W3–4** | 瀏覽影片 + 篩選事件片段（目標 200 個）；定義標注 guideline |
+| **W5–6** | 跑自動特徵提取（Whisper, SigLIP, MediaPipe, Parselmouth）；VLM 自動描述生成；開始你的標注審核工作（~18 hr） |
+| **W7–8** | 訓練 event embedding 模型（4 種方法比較）；跑 retrieval 實驗 |
+| **W9–10** | Modality ablation 實驗；跨文化語用分析；搭建 Streamlit demo 介面 |
+| **W11–12** | 撰寫論文 + 整合到計畫書；與指導教授討論 |
+
+---
+
+## 9. 這個方向為什麼特別適合你
+
+1. **雙曲嵌入專長：** 方法 D（hyperbolic event embedding）直接用你 LREC 論文的技術，且有理論動機（語用事件的層級結構）
+2. **CorPilot / LexiAgent 經驗：** 你做過 agentic corpus linguistics 工具，MoCo v2 的查詢系統是這個思路的多模態延伸
+3. **MultiMoCo / MOCO_Truku：** 你對實驗室的多模態語料庫架構很熟悉，MoCo v2 是 v1 的自然演進
+4. **LangGraph demo 經驗：** 你做過多 agent 系統的 demo，event-driven query 的 backend 可以用類似架構
+5. **語言學訓練：** 語用事件的定義和標注需要語言學知識，不是純工程問題——這正是你的優勢所在
+
+---
+
+## 10. 預算
+
+| 項目 | 預估費用 |
+|------|---------|
+| VLM API（VLM 描述 + embeddings）| ~$100 |
+| LLM API（標注輔助）| ~$50 |
+| GPU（embedding 訓練 + 開源模型推論）| 學術資源 |
+| **合計** | **~$150 USD** |
+
+比 FormosanBench 更便宜，因為重點不在跑大量 VLM evaluation，而在 embedding 模型訓練。
