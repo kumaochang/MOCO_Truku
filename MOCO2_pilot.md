@@ -157,7 +157,6 @@ Multimodal Event (e.g., "安慰", 15 秒)
 | **解說 / 教導 (Explaining)** | 文化傳承報導、耆老訪談 | 指示性手勢、穩定語速、eye contact |
 | **呼籲 / 勸告 (Urging)** | 政策訴求、環境議題報導 | 加重語氣、emphatic gesture、repeated patterns |
 
-這四類構成一個 2×2 矩陣：情感強度（高/低）× 互動方向（支持/推動），有助於分析。
 
 ---
 
