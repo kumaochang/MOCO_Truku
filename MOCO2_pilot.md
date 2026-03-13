@@ -6,13 +6,13 @@
 
 ## 0. 核心論點
 
-語料庫查詢的發展歷程可以這樣看：
+語料庫查詢的發展歷程：
 
 ```
 CQP / Treebank Query         →  Dense Text Retrieval      →  ???
 (symbolic, structural)           (geometric, vector-based)
                                                               ↑
-"找所有 V-not-V 問句"           "找語意上像這句話的句子"        我們要做的：
+"找所有 V-not-V 問句"           "找語意上像這句話的句子"        目標要做的：
                                                               
                                                            Multimodal Event Retrieval
                                                            (event-driven, cross-modal)
@@ -158,55 +158,6 @@ Multimodal Event (e.g., "安慰", 15 秒)
 | **呼籲 / 勸告 (Urging)** | 政策訴求、環境議題報導 | 加重語氣、emphatic gesture、repeated patterns |
 
 這四類構成一個 2×2 矩陣：情感強度（高/低）× 互動方向（支持/推動），有助於分析。
-
-### 3.3 事件切分與標注流程
-
-**Phase 1: 粗切分（半自動）**
-
-```
-TITV 新聞影片（完整集）
-    │
-    ├──→ [場景偵測] PySceneDetect → 自動切分場景
-    ├──→ [語者變換] pyannote speaker diarization → 偵測說話者切換
-    ├──→ [語種偵測] XLSR-53 / Whisper → 標記族語 vs. 華語段落
-    │
-    └──→ 產出候選事件片段（10–45 秒）
-         你快速掃過，選出屬於四類語用事件的片段
-         預估：瀏覽 1 小時原始影片 → 篩出 ~10–15 個事件
-```
-
-**Phase 2: 多層標注（Human-AI Collaborative）**
-
-對每個已選定的事件片段：
-
-| 標注層 | 方法 | 你的角色 |
-|--------|------|---------|
-| Speech act label | 你直接標注（4 類 + "other"） | 主力 |
-| 語種 + CS 標記 | Whisper + XLSR 自動，你 verify | 審核 |
-| 華語轉寫/翻譯 | OCR 字幕 + Whisper，你修正 | 審核 |
-| 族語轉寫 | Whisper 候選 + 你盡力修正（太魯閣語可以做較好，阿美語可能需要 rough transcription）| 盡力 |
-| Prosodic features | 自動擷取（Parselmouth: F0, intensity, speech rate, pause duration） | 不需人工 |
-| Visual features | VLM 自動描述 + MediaPipe 骨架 / AU 偵測 | 你 verify VLM 描述 |
-| 手勢標注 | VLM 候選 + 你 verify（「指示性手勢」「節拍手勢」「象徵手勢」等粗類別） | 審核 |
-
-**關鍵的務實簡化：**
-- 族語轉寫不需要完美——這裡的研究重點是**多模態事件的相似性檢索**，不是 ASR
-- 太魯閣語你可以做較深的轉寫；阿美語可以只做粗略標注或僅用華語翻譯
-- 手勢標注用粗類別就好（5–6 類），不需要做 ELAN 等級的精細標注
-
-### 3.4 標注時間估算
-
-| 步驟 | 事件數 | 每事件時間 | 總時數 |
-|------|-------|----------|-------|
-| Phase 1: 瀏覽篩選 | 需看 ~20 小時原始影片 | 3x 快轉 → ~7 小時 | 7 hr |
-| Phase 2: Speech act 標注 | 200 | ~20 秒 | 1 hr |
-| Phase 2: 語種/CS verify | 200 | ~15 秒 | 1 hr |
-| Phase 2: 轉寫/翻譯 verify | 200 | ~1.5 分鐘 | 5 hr |
-| Phase 2: 視覺/手勢 verify | 200 | ~30 秒 | 2 hr |
-| 品質回顧 | 抽 20% | ~2 分鐘 | 1.5 hr |
-| **合計** | | | **~18 hr** |
-
-分散在 2–3 週內完成是合理的。
 
 ---
 
