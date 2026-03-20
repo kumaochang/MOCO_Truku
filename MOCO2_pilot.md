@@ -23,7 +23,7 @@ CQP / Treebank Query         →  Dense Text Retrieval      →  ???
 
 **gap：** 文本語料庫已經從 symbolic 走向 geometric，但多模態語料庫的查詢仍停留在 metadata filtering 或 keyword search。沒有人提出過以**多模態事件**為查詢單位、以**跨模態向量相似度**為檢索機制的語料探索範式。
 
-**為什麼這很重要：** 語用現象（勸告、安慰、拒絕、開玩笑）本質上是多模態的——語言內容可能含蓄，但語調、停頓、表情、手勢共同構成完整的交際行為。這些現象幾乎無法用傳統的形式化查詢條件描述，但人類可以直覺辨識「這兩個場景在做類似的事」。如果我們能在向量空間中捕捉這種相似性，就打開了一扇全新的研究窗口。
+**為什麼重要：** 語用現象（勸告、安慰、拒絕、開玩笑）本質上是多模態的——語言內容可能含蓄，但語調、停頓、表情、手勢共同構成完整的交際行為。這些現象幾乎無法用傳統的形式化查詢條件描述，但人類可以直覺辨識「這兩個場景在做類似的事」。如果可以在向量空間中捕捉這種相似性，就打開了一扇全新的研究窗口。
 
 ---
 
@@ -167,15 +167,9 @@ Multimodal Event (e.g., "安慰", 15 秒)
 **目標：** 比較不同方法將多模態事件映射到向量空間的效果。
 
 **方法 A: Late Fusion Baseline**
-```python
-# 各模態分別編碼，然後拼接 + 投影
-audio_emb = whisper_encoder(audio)           # 768-dim
-visual_emb = siglip_encoder(keyframes)       # 768-dim
-text_emb = multilingual_e5(transcript)       # 768-dim
-prosody_feat = extract_prosody(audio)         # ~20-dim (F0 stats, pause ratio, rate, ...)
 
-event_emb = MLP(concat(audio_emb, visual_emb, text_emb, prosody_feat))  # → 256-dim
-```
+各模態分別編碼，然後拼接 + 投影
+
 
 **方法 B: Contrastive Learning（類 CLIP）**
 - 正樣本對：同一事件的不同模態（audio ↔ visual ↔ text）
@@ -215,7 +209,7 @@ event_emb = MLP(concat(audio_emb, visual_emb, text_emb, prosody_feat))  # → 25
 
 ### Experiment 3: Cross-Cultural Pragmatic Comparison（跨文化語用比較）
 
-這是語言學貢獻最大的實驗。
+可能是語言學貢獻最大的實驗。
 
 **方法：**
 1. 在 embedding 空間中，以事件類型為單位計算各語言的 cluster centroid
