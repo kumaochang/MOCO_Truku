@@ -1,0 +1,177 @@
+{
+  "retrieval": {
+    "text": {
+      "P@1": 0.6666666666666666,
+      "P@3": 0.5666666666666667,
+      "MAP": 0.5327375111180879
+    },
+    "audio": {
+      "P@1": 0.5,
+      "P@3": 0.3,
+      "MAP": 0.3911099754718108
+    },
+    "multimodal": {
+      "P@1": 0.4,
+      "P@3": 0.33333333333333337,
+      "MAP": 0.4066461134786975
+    }
+  },
+  "label_distribution": {
+    "Explaining": 16,
+    "Celebrating": 4,
+    "Reporting": 2,
+    "Urging": 8
+  },
+  "segments": [
+    {
+      "id": "news-Amis-20260302-01",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-02",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-03",
+      "lang": "Amis",
+      "label": "Celebrating"
+    },
+    {
+      "id": "news-Amis-20260302-04",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-05",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-06",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-07",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-08",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-09",
+      "lang": "Amis",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Amis-20260302-10",
+      "lang": "Amis",
+      "label": "Celebrating"
+    },
+    {
+      "id": "news-Paiwan-20260307-01",
+      "lang": "Paiwan",
+      "label": "Reporting"
+    },
+    {
+      "id": "news-Paiwan-20260307-02",
+      "lang": "Paiwan",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Paiwan-20260307-03",
+      "lang": "Paiwan",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Paiwan-20260307-04",
+      "lang": "Paiwan",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Paiwan-20260307-05",
+      "lang": "Paiwan",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Paiwan-20260307-06",
+      "lang": "Paiwan",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Paiwan-20260307-07",
+      "lang": "Paiwan",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Paiwan-20260307-08",
+      "lang": "Paiwan",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Paiwan-20260307-09",
+      "lang": "Paiwan",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Paiwan-20260307-10",
+      "lang": "Paiwan",
+      "label": "Celebrating"
+    },
+    {
+      "id": "news-Truku-20260305-01",
+      "lang": "Truku",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Truku-20260305-02",
+      "lang": "Truku",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Truku-20260305-03",
+      "lang": "Truku",
+      "label": "Reporting"
+    },
+    {
+      "id": "news-Truku-20260305-04",
+      "lang": "Truku",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Truku-20260305-05",
+      "lang": "Truku",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Truku-20260305-06",
+      "lang": "Truku",
+      "label": "Explaining"
+    },
+    {
+      "id": "news-Truku-20260305-07",
+      "lang": "Truku",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Truku-20260305-08",
+      "lang": "Truku",
+      "label": "Celebrating"
+    },
+    {
+      "id": "news-Truku-20260305-09",
+      "lang": "Truku",
+      "label": "Urging"
+    },
+    {
+      "id": "news-Truku-20260305-10",
+      "lang": "Truku",
+      "label": "Explaining"
+    }
+  ]
+}
